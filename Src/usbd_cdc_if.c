@@ -104,6 +104,7 @@ static struct
 } s_RxBuffer;
 
 char g_VCPInitialized;
+char g_ComPortOpen = 0;
 
 /**
   * @}
@@ -211,7 +212,9 @@ static int8_t CDC_Control_FS  (uint8_t cmd, uint8_t* pbuf, uint16_t length)
   /*                                        4 - Space                            */
   /* 6      | bDataBits  |   1   | Number Data bits (5, 6, 7, 8 or 16).          */
   /*******************************************************************************/
-  case CDC_SET_LINE_CODING:   
+  case CDC_SET_LINE_CODING:  
+    
+    g_ComPortOpen = 1;
 	
     break;
 

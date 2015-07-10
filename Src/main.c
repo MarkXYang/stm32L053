@@ -38,7 +38,7 @@
 
     #include <usbd_core.h>
     #include <usbd_cdc.h>
-    #include <usbd_cdc_if_template.h>
+    #include <usbd_cdc_if.h>
     #include <usbd_desc.h>
 
 #ifdef __cplusplus
@@ -111,6 +111,10 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   
+  while (!g_ComPortOpen);
+  VCP_write("\r\nEnter a number: \r\n", 17);
+
+  
 //while (!g_VCPInitialized) {}
 #if 0
 for (;;)
@@ -126,9 +130,11 @@ for (;;)
     //VCP_write("Enter a number: \r\n", 17);
       if (VCP_read(&byte, 1) != 1)
           continue;
+      
       VCP_write("\r\nYou typed ", 12);
       VCP_write(&byte, 1);
       VCP_write("\r\n", 2);
+      printf("===========\r\n");
   }
 #endif
 #if 0
