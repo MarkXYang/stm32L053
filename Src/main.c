@@ -33,6 +33,9 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+//#include <sys/stat.h>
+#include <stdarg.h>
+#include <stdio.h>
 #include "stm32l0xx_hal.h"
 #include "usb_device.h"
 
@@ -44,6 +47,8 @@
 #ifdef __cplusplus
 extern "C"
 #endif
+
+#define CMD_BUFFER_LEN 64
 
 extern char g_VCPInitialized;
 	
@@ -66,6 +71,7 @@ UART_HandleTypeDef huart2;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
+void usbPrintf(const char* lpszFormat, ...);
 
 /* USER CODE BEGIN PFP */
 
@@ -74,6 +80,7 @@ static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
+
 
 int main(void)
 {
@@ -112,42 +119,41 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   
   while (!g_ComPortOpen);
-  VCP_write("\r\nEnter a number: \r\n", 17);
+    usbPrintf("\r\nEnter a number: \r\n", 17);
 
-  
-//while (!g_VCPInitialized) {}
-#if 0
-for (;;)
-{
-    int val = 0;
-    VCP_write("Enter a number: ");
-    VCP_read(&val, 1);
-    VCP_write("%d = 0x%x\r\n", val, val);
-}
-#else
+#if 1
   for (;;)
   {
     //VCP_write("Enter a number: \r\n", 17);
       if (VCP_read(&byte, 1) != 1)
           continue;
       
-      VCP_write("\r\nYou typed ", 12);
-      VCP_write(&byte, 1);
-      VCP_write("\r\n", 2);
-      printf("===========\r\n");
+      usbPrintf("\r\nYou typed %c\r\n", byte);
+      //usbPrintf(&byte, 1);
+      //VCP_write("\r\n", 2);
+      //usbPrintf("\r\n", 2);
+      
   }
-#endif
-#if 0
-  while (1)
+#else
+  for (;;)
   {
-  /* USER CODE END WHILE */
-
-  /* USER CODE BEGIN 3 */
-
+      int val = 0;
+      VCP_write("Enter a number: ");
+      VCP_read(&val, 1);
+      VCP_write("%d = 0x%x\r\n", val, val);
   }
-  /* USER CODE END 3 */
 #endif
+}
 
+void usbPrintf(const char* lpszFormat, ...)
+{
+  int nLen;
+  char szBuffer[CMD_BUFFER_LEN + 1];
+  va_list args;
+  va_start(args, lpszFormat);
+  nLen = vsnprintf(szBuffer, CMD_BUFFER_LEN + 1, lpszFormat, args);
+  VCP_write(szBuffer, nLen);
+  va_end(args);
 }
 
 #if 0
