@@ -17,15 +17,15 @@
         <debug>1</debug>
         <option>
           <name>ExePath</name>
-          <state>discovery_stm32l053_usb_cdc Configuration/Exe</state>
+          <state>Configuration/Exe</state>
         </option>
         <option>
           <name>ObjPath</name>
-          <state>discovery_stm32l053_usb_cdc Configuration/Obj</state>
+          <state>Configuration/Obj</state>
         </option>
         <option>
           <name>ListPath</name>
-          <state>discovery_stm32l053_usb_cdc Configuration/List</state>
+          <state>Configuration/List</state>
         </option>
         <option>
           <name>Variant</name>
@@ -655,7 +655,7 @@
         </option>
         <option>
           <name>IlinkOutputFile</name>
-          <state>discovery_stm32l053_usb_cdc Configuration.out</state>
+          <state>discovery_stm32l053_usb_cdc.out</state>
         </option>
         <option>
           <name>IlinkDebugInfoEnable</name>

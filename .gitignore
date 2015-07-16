@@ -1,0 +1,9 @@
+EWARM/settings
+EWARM/Configuration
+*.dep
+*.o
+*.d
+*.bin
+*.hex
+*.map
+
