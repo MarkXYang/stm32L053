@@ -51,6 +51,15 @@ extern "C"
 #define CMD_BUFFER_LEN 64
 
 extern char g_VCPInitialized;
+
+char* hw_test_menu[] = {
+  "1. GPIO test\r\n",
+  "2. I2C test\r\n",
+  "3. ADC test\r\n",
+  "4. DAC test\r\n",
+  "5. LED test\r\n",
+  "6. Heat test\r\n",
+};
 	
 
   //  USBD_HandleTypeDef USBD_Device;
@@ -87,6 +96,7 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
   char byte;
+  int numMenu = sizeof(hw_test_menu)/sizeof(hw_test_menu[0]);
 
   /* USER CODE END 1 */
 
@@ -119,9 +129,42 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   
   while (!g_ComPortOpen);
-    usbPrintf("\r\nEnter a number: \r\n", 17);
+    usbPrintf("\r\nHareware Test Menu: \r\n", 17);
 
 #if 1
+    while(1) {
+      for(int i = 0; i < numMenu; i++)
+        usbPrintf(hw_test_menu[i]);
+      usbPrintf("Please enter number to select test item: ");
+      while(VCP_read(&byte, 1) != 1) {}
+      switch(byte) {
+      case 0x31:
+        usbPrintf(hw_test_menu[0]);
+        break;
+      case 0x32:
+        usbPrintf(hw_test_menu[1]);
+        break;
+      case 0x33:
+        usbPrintf(hw_test_menu[2]);
+        break;
+      case 0x34:
+        usbPrintf(hw_test_menu[3]);
+        break;
+      case '5':
+        usbPrintf(hw_test_menu[4]);
+        break;
+      case '6':
+        usbPrintf(hw_test_menu[5]);
+        break;
+      default:
+        usbPrintf("Not a valid number\r\n");
+      }
+    }
+    
+    
+      
+    
+    
   for (;;)
   {
     //VCP_write("Enter a number: \r\n", 17);
@@ -247,6 +290,8 @@ void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __GPIOA_CLK_ENABLE();
+  __GPIOB_CLK_ENABLE();
+  
 
 }
 
