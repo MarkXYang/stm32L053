@@ -50,17 +50,31 @@ extern "C"
 
 #define CMD_BUFFER_LEN 64
 
+
 extern char g_VCPInitialized;
 
-char* hw_test_menu[] = {
-  "1. GPIO test\r\n",
-  "2. I2C test\r\n",
-  "3. ADC test\r\n",
-  "4. DAC test\r\n",
-  "5. LED test\r\n",
-  "6. Heat test\r\n",
+typedef struct s_cmd {
+  const char* cmd_text;
+  int cmd_id;
+} t_cmd;
+
+#define CMD_GPIO_TEST 	1
+#define CMD_I2C_TEST 	2
+#define CMD_ADC_TEST	3
+#define CMD_DAC_TEST	4
+#define CMD_LED_TEST	5
+#define CMD_HEAT_TEST	6
+
+t_cmd hw_test_main_menu[] = {
+  {"GPIO test", CMD_GPIO_TEST},
+  {"I2C test", CMD_I2C_TEST},
+  {"ADC test", CMD_ADC_TEST},
+  {"DAC test", CMD_DAC_TEST},
+  {"LED test", CMD_LED_TEST},
+  {"Heat test", CMD_HEAT_TEST},
 };
 	
+
 
   //  USBD_HandleTypeDef USBD_Device;
 //caddr_t _sbrk(int increment);
@@ -81,6 +95,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 void usbPrintf(const char* lpszFormat, ...);
+void printCmdPrompt(char* prefix, t_cmd menu[], int numOfMenuitem);
 
 /* USER CODE BEGIN PFP */
 
@@ -96,7 +111,6 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
   char byte;
-  int numMenu = sizeof(hw_test_menu)/sizeof(hw_test_menu[0]);
 
   /* USER CODE END 1 */
 
@@ -129,32 +143,32 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   
   while (!g_ComPortOpen);
-    usbPrintf("\r\nHareware Test Menu: \r\n", 17);
+    usbPrintf("\r\nHareware Test Menu: \r\n");
 
 #if 1
     while(1) {
-      for(int i = 0; i < numMenu; i++)
-        usbPrintf(hw_test_menu[i]);
+      printCmdPrompt("", hw_test_main_menu, sizeof(hw_test_main_menu) / sizeof(hw_test_main_menu[0]));
+
       usbPrintf("Please enter number to select test item: ");
       while(VCP_read(&byte, 1) != 1) {}
       switch(byte) {
-      case 0x31:
-        usbPrintf(hw_test_menu[0]);
+      case CMD_GPIO_TEST:
+        usbPrintf(hw_test_main_menu[0].cmd_text);
         break;
-      case 0x32:
-        usbPrintf(hw_test_menu[1]);
+      case CMD_I2C_TEST:
+        usbPrintf(hw_test_main_menu[1].cmd_text);
         break;
-      case 0x33:
-        usbPrintf(hw_test_menu[2]);
+      case CMD_ADC_TEST:
+        usbPrintf(hw_test_main_menu[2].cmd_text);
         break;
-      case 0x34:
-        usbPrintf(hw_test_menu[3]);
+      case CMD_DAC_TEST:
+        usbPrintf(hw_test_main_menu[3].cmd_text);
         break;
-      case '5':
-        usbPrintf(hw_test_menu[4]);
+      case CMD_LED_TEST:
+        usbPrintf(hw_test_main_menu[4].cmd_text);
         break;
-      case '6':
-        usbPrintf(hw_test_menu[5]);
+      case CMD_HEAT_TEST:
+        usbPrintf(hw_test_main_menu[5].cmd_text);
         break;
       default:
         usbPrintf("Not a valid number\r\n");
@@ -199,6 +213,13 @@ void usbPrintf(const char* lpszFormat, ...)
   va_end(args);
 }
 
+
+void printCmdPrompt(char* prefix, t_cmd menu[], int menu_num)
+{
+  int i;
+  for (i = 0; i < menu_num; i++)
+    usbPrintf("%s%d: %s\r\n", prefix, menu[i].cmd_id, menu[i].cmd_text);
+}
 #if 0
 caddr_t _sbrk(int increment)
 {
