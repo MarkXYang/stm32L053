@@ -39,31 +39,21 @@
 #include "stm32l0xx_hal.h"
 #include "usb_device.h"
 
-    #include <usbd_core.h>
-    #include <usbd_cdc.h>
-    #include <usbd_cdc_if.h>
-    #include <usbd_desc.h>
+#include <usbd_core.h>
+#include <usbd_cdc.h>
+#include <usbd_cdc_if.h>
+#include <usbd_desc.h>
+
+#include "main.h"
 
 #ifdef __cplusplus
 extern "C"
 #endif
 
-#define CMD_BUFFER_LEN 64
 
 
 extern char g_VCPInitialized;
 
-typedef struct s_cmd {
-  const char* cmd_text;
-  int cmd_id;
-} t_cmd;
-
-#define CMD_GPIO_TEST 	0
-#define CMD_I2C_TEST 	1
-#define CMD_ADC_TEST	2
-#define CMD_DAC_TEST	3
-#define CMD_LED_TEST	4
-#define CMD_HEAT_TEST	5
 
 t_cmd hw_test_main_menu[] = {
   {"GPIO test", CMD_GPIO_TEST},
@@ -73,7 +63,6 @@ t_cmd hw_test_main_menu[] = {
   {"LED test", CMD_LED_TEST},
   {"Heat test", CMD_HEAT_TEST},
 };
-	
 
 
   //  USBD_HandleTypeDef USBD_Device;
@@ -90,14 +79,7 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE END PV */
 
-/* Private function prototypes -----------------------------------------------*/
-void SystemClock_Config(void);
-static void MX_GPIO_Init(void);
-static void MX_USART2_UART_Init(void);
-void usbPrintf(const char* lpszFormat, ...);
-int usbRead(char *pBuffer, int size);
-void printCmdPrompt(char* prefix, t_cmd menu[], int numOfMenuitem);
-int char2int(char byte);
+
 
 /* USER CODE BEGIN PFP */
 
