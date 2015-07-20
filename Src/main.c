@@ -95,6 +95,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 void usbPrintf(const char* lpszFormat, ...);
+int usbRead(char *pBuffer, int size);
 void printCmdPrompt(char* prefix, t_cmd menu[], int numOfMenuitem);
 
 /* USER CODE BEGIN PFP */
@@ -150,7 +151,7 @@ int main(void)
       printCmdPrompt("", hw_test_main_menu, sizeof(hw_test_main_menu) / sizeof(hw_test_main_menu[0]));
 
       usbPrintf("Please enter number to select test item: ");
-      while(VCP_read(&byte, 1) != 1) {}
+      usbRead(&byte, 1);
       switch(byte) {
       case CMD_GPIO_TEST:
         usbPrintf(hw_test_main_menu[0].cmd_text);
@@ -213,6 +214,14 @@ void usbPrintf(const char* lpszFormat, ...)
   va_end(args);
 }
 
+int usbRead(char *pBuffer, int size)
+{
+  for (;;) {
+    int done = VCP_read(pBuffer, size);
+    if (done)
+        return done;
+  }
+}
 
 void printCmdPrompt(char* prefix, t_cmd menu[], int menu_num)
 {
