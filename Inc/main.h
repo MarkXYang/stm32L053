@@ -61,6 +61,7 @@ void usbPrintf(const char* lpszFormat, ...);
 int usbRead(char *pBuffer, int size);
 void printCmdPrompt(char* prefix, t_cmd menu[], int numOfMenuitem);
 int char2int(char byte);
+int gpio_test(void);
 
 
 #ifdef __cplusplus

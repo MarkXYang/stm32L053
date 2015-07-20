@@ -74,6 +74,7 @@ t_cmd hw_test_main_menu[] = {
 
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart2;
+static GPIO_InitTypeDef  GPIO_InitStruct;
 
 /* USER CODE BEGIN PV */
 
@@ -132,17 +133,18 @@ int main(void)
     usbPrintf("\r\nHareware Test Menu: \r\n");
     
   printCmdPrompt("", hw_test_main_menu, sizeof(hw_test_main_menu) / sizeof(hw_test_main_menu[0]));
-  usbPrintf("Please enter number to select test item: \r\n");
+  usbPrintf("Please enter number to select test item: ");
 
 #if 1
     while(1) {
       
       usbRead(&byte, 1);
+      usbPrintf(&byte);
       iByte = char2int(byte);
       switch(iByte) {
       case CMD_GPIO_TEST:
-        usbPrintf(hw_test_main_menu[iByte].cmd_text);
-        usbPrintf("\r\n");
+
+        gpio_test();
         break;
       case CMD_I2C_TEST:
         usbPrintf(hw_test_main_menu[iByte].cmd_text);
@@ -167,24 +169,8 @@ int main(void)
       default:
         usbPrintf("Not a valid number\r\n");
       }
+      usbPrintf("Please enter number to select test item: ");
     }
-    
-    
-      
-    
-    
-  for (;;)
-  {
-    //VCP_write("Enter a number: \r\n", 17);
-      if (VCP_read(&byte, 1) != 1)
-          continue;
-      
-      usbPrintf("\r\nYou typed %c\r\n", byte);
-      //usbPrintf(&byte, 1);
-      //VCP_write("\r\n", 2);
-      //usbPrintf("\r\n", 2);
-      
-  }
 #else
   for (;;)
   {
@@ -244,6 +230,57 @@ int char2int(char byte)
   }
 }
 
+int gpio_test(void)
+{
+  char iBank, cGpioPin, gpioDir, cGpioOutVal;
+  int nGpioPin, nGpioOutVal;
+  GPIO_TypeDef* gpioBank;
+  
+  usbPrintf("\r\nPlease input GPIO Bank(A-B): ");
+  usbRead(&iBank, 1);
+  usbPrintf(&iBank);
+  if(iBank == 'A' | iBank == 'a') {
+    usbPrintf("\r\nBank A");
+    gpioBank = GPIOA;
+  } else if (iBank == 'B' | iBank == 'b')
+    gpioBank = GPIOB;
+  else {
+    usbPrintf("Invalid Gpio bank number!\r\n");
+    return -1;
+  }
+  usbPrintf("\r\nPlease input GPIO Pin(0-F):");
+  usbRead(&cGpioPin, 1);
+  usbPrintf(&cGpioPin);
+  nGpioPin = char2int(cGpioPin);
+  usbPrintf("\r\n");
+  usbPrintf("\r\nPlease input GPIO Direction(0-In, 1-Out): ");
+  usbRead(&gpioDir, 1);
+  usbPrintf(&gpioDir);
+  GPIO_InitStruct.Pin = ((uint16_t)0x0001 << nGpioPin);
+  GPIO_InitStruct.Speed = GPIO_SPEED_FAST;
+ 
+  if (gpioDir == 0x31) {
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    HAL_GPIO_Init(gpioBank, &GPIO_InitStruct);
+    usbPrintf("\r\nPlease input 1 or 0 to put gpio high or low: ");
+    usbRead(&cGpioOutVal, 1);
+    usbPrintf(&cGpioOutVal);
+    nGpioOutVal = char2int(cGpioOutVal);
+    usbPrintf("\r\n");
+    
+    HAL_GPIO_WritePin(gpioBank, GPIO_InitStruct.Pin, (GPIO_PinState)nGpioOutVal);
+
+  } else {
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    HAL_GPIO_Init(gpioBank, &GPIO_InitStruct);
+    HAL_Delay(100);
+    usbPrintf("\r\nThe gpio value is: %d\r\n", HAL_GPIO_ReadPin(gpioBank, GPIO_InitStruct.Pin));
+    
+  }  
+  return 0;
+}
 #if 0
 caddr_t _sbrk(int increment)
 {
