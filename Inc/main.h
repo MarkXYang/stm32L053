@@ -55,6 +55,8 @@ typedef struct s_cmd {
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+static void MX_ADC_Init(void);
+static void MX_DAC_Init(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_I2C1_Init(void);
@@ -64,7 +66,8 @@ void printCmdPrompt(char* prefix, t_cmd menu[], int numOfMenuitem);
 int char2int(char byte);
 int gpio_test(void);
 void i2c_test(void);
-
+int adc_test(void);
+int dac_test(void);
 
 #ifdef __cplusplus
 }

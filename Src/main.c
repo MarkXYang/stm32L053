@@ -73,6 +73,10 @@ t_cmd hw_test_main_menu[] = {
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc;
+
+DAC_HandleTypeDef hdac;
+
 UART_HandleTypeDef huart2;
 static GPIO_InitTypeDef  GPIO_InitStruct;
 I2C_HandleTypeDef hi2c1;
@@ -112,6 +116,9 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DAC_Init();
+  MX_ADC_Init();
+  
   MX_USART2_UART_Init();
   MX_I2C1_Init();
   
@@ -151,12 +158,10 @@ int main(void)
         i2c_test();
         break;
       case CMD_ADC_TEST:
-        usbPrintf(hw_test_main_menu[iByte].cmd_text);
-        usbPrintf("\r\n");
+        adc_test();
         break;
       case CMD_DAC_TEST:
-        usbPrintf(hw_test_main_menu[iByte].cmd_text);
-        usbPrintf("\r\n");
+        dac_test();
         break;
       case CMD_LED_TEST:
         usbPrintf(hw_test_main_menu[iByte].cmd_text);
@@ -297,6 +302,82 @@ void i2c_test(void)
   }
   usbPrintf("The value is: %x\r\n", data);
 }
+
+int adc_test(void)
+{
+  ADC_ChannelConfTypeDef sConfig;
+  uint32_t uAdcChannel[3] = {ADC_CHANNEL_0, ADC_CHANNEL_1, ADC_CHANNEL_2};
+  char cChannel;
+  int nChannelId, nAdcVal;
+  char key = 0;
+#if 0
+  usbPrintf("Please input the ADC channel for test\r\n");
+  usbRead(&cChannel, 1);
+  nChannelId = char2int(cChannel);
+  
+  sConfig.Channel = uAdcChannel[nChannelId];
+  HAL_ADC_ConfigChannel(&hadc, &sConfig);
+  
+  if (HAL_ADCEx_Calibration_Start(&hadc, ADC_SINGLE_ENDED) != HAL_OK)
+  {
+    usbPrintf("ADC Calibration failed!\r\n");
+  }
+#endif  
+  if (HAL_ADC_Start(&hadc) != HAL_OK)
+  {
+    usbPrintf("ADC start failed!\r\n");
+    return -1;
+  }
+  
+  
+  while(key != 's' && key != 'S') {
+     
+    if (HAL_ADC_PollForConversion(&hadc, 10) != HAL_OK)
+    {
+      usbPrintf("ADC Poll failed!\r\n");
+      return -1;
+    }
+    
+    /* Read the converted value */
+    nAdcVal = HAL_ADC_GetValue(&hadc);
+    usbPrintf("\r\nThe ADC value of %d channel is: %d\r\n", nChannelId, nAdcVal); 
+    
+
+    usbPrintf("If you'd like to quit ADC test, press S to stop; \r\n");
+    usbPrintf("else any key to make another test!\r\n");
+    usbRead(&key, 1);
+  }
+  HAL_ADC_Stop(&hadc);
+  return 0;
+}
+
+int dac_test(void)
+{
+  char cLevel, key = 0;
+  int nLevel;
+  
+  while(key != 's' && key != 'S') {
+    usbPrintf("\r\nPlease input the DAC level for test(0 ~ F: 16 levels)\r\n");
+    usbRead(&cLevel, 1);
+    nLevel = char2int(cLevel);
+    
+   /*##-3- Set DAC Channel1 DHR register ######################################*/ 
+    if(HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_8B_R, nLevel*0x10 + 0xF) != HAL_OK)
+    {
+      /* Setting value Error */
+      usbPrintf("DAC_SetValue failed!\r\n");
+    }
+    
+     /*##-4- Enable DAC Channel1 ################################################*/ 
+    if(HAL_DAC_Start(&hdac, DAC_CHANNEL_1) != HAL_OK) {
+      usbPrintf("DAC_Start failed!\r\n");
+    }
+  
+    usbPrintf("If you'd like to quit ADC test, press S to stop; \r\n");
+    usbPrintf("else any key to make another test!\r\n");
+    usbRead(&key, 1);
+  }
+}
 #if 0
 caddr_t _sbrk(int increment)
 {
@@ -360,6 +441,72 @@ void SystemClock_Config(void)
   HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit);
 
   __SYSCFG_CLK_ENABLE();
+
+}
+
+/* ADC init function */
+void MX_ADC_Init(void)
+{
+
+  ADC_ChannelConfTypeDef sConfig;
+
+    /**Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
+    */
+  hadc.Instance = ADC1;
+  hadc.Init.OversamplingMode         = ENABLE;
+  hadc.Init.Oversample.Ratio         = ADC_OVERSAMPLING_RATIO_128;
+  hadc.Init.Oversample.RightBitShift = ADC_RIGHTBITSHIFT_3;
+  hadc.Init.Oversample.TriggeredMode = ADC_TRIGGEREDMODE_SINGLE_TRIGGER;
+  
+  hadc.Init.ClockPrescaler        = ADC_CLOCKPRESCALER_PCLK_DIV1;
+  //hadc.Init.LowPowerAutoOff       = DISABLE;
+  hadc.Init.LowPowerFrequencyMode = ENABLE;
+  hadc.Init.LowPowerAutoWait      = ENABLE;
+    
+  hadc.Init.Resolution            = ADC_RESOLUTION12b;
+  hadc.Init.SamplingTime          = ADC_SAMPLETIME_7CYCLES_5;
+  //hadc.Init.ScanDirection         = ADC_SCAN_DIRECTION_FORWARD;
+  hadc.Init.DataAlign             = ADC_DATAALIGN_RIGHT;
+  hadc.Init.ContinuousConvMode    = ENABLE;
+  hadc.Init.DiscontinuousConvMode = DISABLE;
+  hadc.Init.ExternalTrigConvEdge  = ADC_EXTERNALTRIG_EDGE_NONE;
+  hadc.Init.EOCSelection          = EOC_SINGLE_CONV;
+  hadc.Init.DMAContinuousRequests = DISABLE;
+  HAL_ADC_Init(&hadc);
+
+    /**Configure for the selected ADC regular channel to be converted. 
+    */
+  sConfig.Channel = ADC_CHANNEL_0;
+  HAL_ADC_ConfigChannel(&hadc, &sConfig);
+
+    /**Configure for the selected ADC regular channel to be converted. 
+    */
+  sConfig.Channel = ADC_CHANNEL_1;
+  HAL_ADC_ConfigChannel(&hadc, &sConfig);
+
+    /**Configure for the selected ADC regular channel to be converted. 
+    */
+  sConfig.Channel = ADC_CHANNEL_2;
+  HAL_ADC_ConfigChannel(&hadc, &sConfig);
+
+}
+
+/* DAC init function */
+void MX_DAC_Init(void)
+{
+
+  DAC_ChannelConfTypeDef sConfig;
+
+    /**DAC Initialization 
+    */
+  hdac.Instance = DAC;
+  HAL_DAC_Init(&hdac);
+
+    /**DAC channel OUT1 config 
+    */
+  sConfig.DAC_Trigger = DAC_TRIGGER_NONE;
+  sConfig.DAC_OutputBuffer = DAC_OUTPUTBUFFER_ENABLE;
+  HAL_DAC_ConfigChannel(&hdac, &sConfig, DAC_CHANNEL_1);
 
 }
 
