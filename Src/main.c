@@ -50,7 +50,7 @@
 extern "C"
 #endif
 
-
+#define I2C_ADDRESS             0x90
 
 extern char g_VCPInitialized;
 
@@ -75,6 +75,7 @@ t_cmd hw_test_main_menu[] = {
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart2;
 static GPIO_InitTypeDef  GPIO_InitStruct;
+I2C_HandleTypeDef hi2c1;
 
 /* USER CODE BEGIN PV */
 
@@ -112,6 +113,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
+  MX_I2C1_Init();
   
  /*   USBD_Init(&USBD_Device, &FS_Desc, 0);
 
@@ -143,12 +145,10 @@ int main(void)
       iByte = char2int(byte);
       switch(iByte) {
       case CMD_GPIO_TEST:
-
         gpio_test();
         break;
       case CMD_I2C_TEST:
-        usbPrintf(hw_test_main_menu[iByte].cmd_text);
-        usbPrintf("\r\n");
+        i2c_test();
         break;
       case CMD_ADC_TEST:
         usbPrintf(hw_test_main_menu[iByte].cmd_text);
@@ -281,6 +281,22 @@ int gpio_test(void)
   }  
   return 0;
 }
+
+void i2c_test(void)
+{
+  uint8_t data = 24;
+  while(HAL_I2C_Master_Transmit(&hi2c1, (uint16_t)I2C_ADDRESS, &data, 1, 500) != HAL_OK) {
+    if (HAL_I2C_GetError(&hi2c1) != HAL_I2C_ERROR_AF) {
+      usbPrintf("\r\nI2C1 access error!\r\n");
+    }
+  }
+  while(HAL_I2C_Master_Receive(&hi2c1, (uint16_t)I2C_ADDRESS, &data, 1, 500) != HAL_OK) {
+    if (HAL_I2C_GetError(&hi2c1) != HAL_I2C_ERROR_AF) {
+      usbPrintf("\r\nI2C1 access error!\r\n");
+    }
+  }
+  usbPrintf("The value is: %x\r\n", data);
+}
 #if 0
 caddr_t _sbrk(int increment)
 {
@@ -374,6 +390,27 @@ void MX_GPIO_Init(void)
   __GPIOA_CLK_ENABLE();
   __GPIOB_CLK_ENABLE();
   
+
+}
+
+/* I2C1 init function */
+void MX_I2C1_Init(void)
+{
+
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.Timing = 0x00506682;
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLED;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLED;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLED;
+  HAL_I2C_Init(&hi2c1);
+
+    /**Configure Analogue filter 
+    */
+  HAL_I2CEx_AnalogFilter_Config(&hi2c1, I2C_ANALOGFILTER_ENABLED);
 
 }
 
